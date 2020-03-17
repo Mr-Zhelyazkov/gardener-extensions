@@ -328,7 +328,7 @@ func (t *terraformer) env() []corev1.EnvVar {
 	return envVars
 }
 
-func (t *terraformer) podSpec(scriptName string) *corev1.PodSpec {
+func (t *terraformer) podSpec(command string) *corev1.PodSpec {
 	const (
 		tfVolume      = "tf"
 		tfVarsVolume  = "tfvars"
@@ -340,7 +340,6 @@ func (t *terraformer) podSpec(scriptName string) *corev1.PodSpec {
 	)
 
 	terminationGracePeriodSeconds := t.terminationGracePeriodSeconds
-	shCommand := fmt.Sprintf("sh /terraform.sh %s 2>&1; [[ -f /success ]] && exit 0 || exit 1", scriptName)
 
 	return &corev1.PodSpec{
 		RestartPolicy: corev1.RestartPolicyNever,
@@ -350,9 +349,8 @@ func (t *terraformer) podSpec(scriptName string) *corev1.PodSpec {
 				Image:           t.image,
 				ImagePullPolicy: corev1.PullIfNotPresent,
 				Command: []string{
-					"sh",
-					"-c",
-					shCommand,
+					"/terraformer.sh",
+					command,
 				},
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
